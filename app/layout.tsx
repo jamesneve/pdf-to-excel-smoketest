@@ -15,13 +15,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <Script
           async
-          src="https://plausible.io/js/pa-tzdOVtEi13loHSc3wlc6D.js"
+          src="https://plausible.io/js/pa-qb6qooiSm4WW3FJtTy0rc.js"
           strategy="afterInteractive"
         />
         <Script id="plausible-init" strategy="afterInteractive">
           {`
-            window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-            plausible.init()
+            window.plausible = window.plausible || function() {
+              (window.plausible.q = window.plausible.q || []).push(arguments)
+            };
           `}
         </Script>
       </body>
