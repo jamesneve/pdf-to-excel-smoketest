@@ -20,11 +20,28 @@ export default function Page() {
     return true;
   }, [email, status]);
 
-  function track(event: string, props: Record<string, unknown> = {}) {
-    if (typeof window === "undefined") return;
-    const p = (window as unknown as { plausible?: (e: string, o?: { props?: Record<string, unknown> }) => void }).plausible;
-    if (!p) return;
-    p(event, Object.keys(props).length ? { props } : undefined);
+  function getAttribution() {
+    if (typeof window === "undefined") return {};
+    const qs = new URLSearchParams(window.location.search);
+  
+    const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid"] as const;
+  
+    const out: Record<string, string> = {};
+    for (const k of keys) {
+      const v = qs.get(k);
+      if (v) out[k] = v;
+    }
+    return out;
+  }
+  
+  async function track(event: string, props: Record<string, unknown> = {}) {
+    try {
+      await fetch("/api/e", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ event, props: { ...getAttribution(), ...props } })
+      });
+    } catch {}
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -39,6 +56,11 @@ export default function Page() {
       fd.set("company", company.trim());
       fd.set("notes", notes.trim());
       if (file) fd.set("file", file);
+
+      const attr = getAttribution();
+      for (const [k, v] of Object.entries(attr)) {
+        fd.set(k, v);
+      }
 
       const res = await fetch("/api/lead", { method: "POST", body: fd });
       if (!res.ok) {
