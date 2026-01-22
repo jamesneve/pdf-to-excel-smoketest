@@ -1,7 +1,6 @@
 import "./globals.css";
-import Script from "next/script";
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next"
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "帳票PDF→Excel 自動入力（検証中）",
@@ -15,19 +14,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
 
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-H3E1BPXL10"
+          async
+          src="https://plausible.io/js/pa-tzdOVtEi13loHSc3wlc6D.js"
           strategy="afterInteractive"
         />
-        <Script id="ga-init" strategy="afterInteractive">
+        <Script id="plausible-init" strategy="afterInteractive">
           {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-H3E1BPXL10', { anonymize_ip: true });
+            window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+            plausible.init()
           `}
         </Script>
       </body>
     </html>
   );
 }
-

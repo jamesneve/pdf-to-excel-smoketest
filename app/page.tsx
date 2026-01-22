@@ -20,11 +20,11 @@ export default function Page() {
     return true;
   }, [email, status]);
 
-  function track(event: string, params: Record<string, unknown> = {}) {
+  function track(event: string, props: Record<string, unknown> = {}) {
     if (typeof window === "undefined") return;
-    if (!("gtag" in window)) return;
-    // @ts-ignore
-    window.gtag("event", event, params);
+    const p = (window as unknown as { plausible?: (e: string, o?: { props?: Record<string, unknown> }) => void }).plausible;
+    if (!p) return;
+    p(event, Object.keys(props).length ? { props } : undefined);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -67,13 +67,13 @@ export default function Page() {
           同じ帳票なら、一度設定するだけで PDF・スキャン書類をExcelに自動入力します。
         </p>
         <div className="ctaRow">
-        <a
-          className="btn btnPrimary"
-          href="#check"
-          onClick={() => track("cta_click", { position: "hero" })}
-        >
-          無料で使えるか確認する
-        </a>
+          <a
+            className="btn btnPrimary"
+            href="#check"
+            onClick={() => track("cta_click", { position: "hero" })}
+          >
+            無料で使えるか確認する
+          </a>
           <a className="btn" href="#how">
             仕組みを見る
           </a>
@@ -172,9 +172,10 @@ export default function Page() {
                   type="file"
                   accept="application/pdf,image/*"
                   onChange={(e) => {
-                    setFile(e.target.files?.[0] ?? null);
-                    if (e.target.files?.[0]) {
-                      track("file_attached", { size: e.target.files[0].size });
+                    const f = e.target.files?.[0] ?? null;
+                    setFile(f);
+                    if (f) {
+                      track("file_attached", { size: f.size, type: f.type });
                     }
                   }}
                 />
