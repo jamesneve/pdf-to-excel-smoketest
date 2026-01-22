@@ -234,7 +234,7 @@ export default function Page() {
       <div className="card footer">
         <div>会社名：株式会社 Aisara</div>
         <div>所在地：〒132-0011 東京都江戸川区瑞江２丁目−５−３ グレイス瑞江 2F</div>
-        <div>お問い合わせ：info@aisara.co.jp</div>
+        <div>お問い合わせ：info@aisara.jp</div>
         <div>現在は開発検証段階です。</div>
       </div>
     </main>
