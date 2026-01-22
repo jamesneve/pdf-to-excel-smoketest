@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Script from "next/script";
+import { AnalyticsProvider } from "./plausible-provider";
 
 export const metadata: Metadata = {
   title: "帳票PDF→Excel 自動入力（検証中）",
@@ -11,20 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <body>
-        {children}
-
-        <Script
-          async
-          src="https://plausible.io/js/pa-qb6qooiSm4WW3FJtTy0rc.js"
-          strategy="afterInteractive"
-        />
-        <Script id="plausible-init" strategy="afterInteractive">
-          {`
-            window.plausible = window.plausible || function() {
-              (window.plausible.q = window.plausible.q || []).push(arguments)
-            };
-          `}
-        </Script>
+        <AnalyticsProvider>{children}</AnalyticsProvider>
       </body>
     </html>
   );

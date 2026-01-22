@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePlausible } from "next-plausible";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
 export default function Page() {
+  const plausible = usePlausible();
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -12,6 +14,7 @@ export default function Page() {
   const [company, setCompany] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
+  
 
   const canSubmit = useMemo(() => {
     if (status === "sending") return false;
@@ -21,10 +24,7 @@ export default function Page() {
   }, [email, status]);
 
   function track(event: string, props: Record<string, unknown> = {}) {
-    if (typeof window === "undefined") return;
-    const p = (window as unknown as { plausible?: (e: string, o?: { props?: Record<string, unknown> }) => void }).plausible;
-    if (!p) return;
-    p(event, Object.keys(props).length ? { props } : undefined);
+    plausible(event, Object.keys(props).length ? { props } : undefined);
   }
 
   async function onSubmit(e: React.FormEvent) {
