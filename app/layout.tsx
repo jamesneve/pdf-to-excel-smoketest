@@ -1,6 +1,7 @@
 import "./globals.css";
 import Script from "next/script";
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: "帳票PDF→Excel 自動入力（検証中）",
