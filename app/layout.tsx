@@ -10,6 +10,19 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
+      <head>
+        <Script id="plausible-bootstrap" strategy="beforeInteractive">
+          {`
+            window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+            plausible.init()
+          `}
+        </Script>
+        <Script
+          async
+          src="https://plausible.io/js/pa-qb6qooiSm4WW3FJtTy0rc.js"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body>
         {children}
       </body>
