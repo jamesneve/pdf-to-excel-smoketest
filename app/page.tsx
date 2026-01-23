@@ -1,3 +1,4 @@
+```tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -23,9 +24,9 @@ export default function Page() {
   function getAttribution() {
     if (typeof window === "undefined") return {};
     const qs = new URLSearchParams(window.location.search);
-  
+
     const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid"] as const;
-  
+
     const out: Record<string, string> = {};
     for (const k of keys) {
       const v = qs.get(k);
@@ -33,7 +34,7 @@ export default function Page() {
     }
     return out;
   }
-  
+
   async function track(event: string, props: Record<string, unknown> = {}) {
     try {
       await fetch("/api/e", {
@@ -44,10 +45,21 @@ export default function Page() {
     } catch {}
   }
 
+  function plausible(event: string, props: Record<string, unknown> = {}) {
+    try {
+      const w = window as unknown as {
+        plausible?: (e: string, opts?: { props?: Record<string, unknown> }) => void;
+      };
+      w.plausible?.(event, { props: { ...getAttribution(), ...props } });
+    } catch {}
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setStatus("sending");
+
+    plausible("lead_form_submit_attempt", { docType, hasFile: !!file });
 
     try {
       const fd = new FormData();
@@ -70,9 +82,19 @@ export default function Page() {
 
       setStatus("sent");
       track("form_submit", { docType });
+      plausible("lead_form_submit_success", {
+        docType,
+        hasFile: !!file,
+        fileType: file?.type || "",
+        fileSize: file?.size ?? 0,
+        companyFilled: !!company.trim(),
+        notesFilled: !!notes.trim()
+      });
     } catch (err) {
       setStatus("error");
-      setError(err instanceof Error ? err.message : "送信に失敗しました");
+      const msg = err instanceof Error ? err.message : "送信に失敗しました";
+      setError(msg);
+      plausible("lead_form_submit_error", { message: msg });
     }
   }
 
@@ -85,18 +107,25 @@ export default function Page() {
 
       <div className="card hero">
         <h1 className="h1">PDFを開いて、Excelに打ち直す作業をやめませんか？</h1>
-        <p className="lead">
-          同じ帳票なら、一度設定するだけで PDF・スキャン書類をExcelに自動入力します。
-        </p>
+        <p className="lead">同じ帳票なら、一度設定するだけで PDF・スキャン書類をExcelに自動入力します。</p>
         <div className="ctaRow">
           <a
             className="btn btnPrimary"
             href="#check"
-            onClick={() => track("cta_click", { position: "hero" })}
+            onClick={() => {
+              track("cta_click", { position: "hero" });
+              plausible("cta_click", { position: "hero", target: "check" });
+            }}
           >
             無料で使えるか確認する
           </a>
-          <a className="btn" href="#how">
+          <a
+            className="btn"
+            href="#how"
+            onClick={() => {
+              plausible("secondary_cta_click", { position: "hero", target: "how" });
+            }}
+          >
             仕組みを見る
           </a>
         </div>
@@ -157,9 +186,15 @@ export default function Page() {
                 <input
                   className="input"
                   type="email"
-                  onFocus={() => track("form_start")}
+                  onFocus={() => {
+                    track("form_start");
+                    plausible("lead_form_start");
+                  }}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    plausible("lead_email_change", { length: e.target.value.length });
+                  }}
                   placeholder="name@company.co.jp"
                   required
                 />
@@ -167,7 +202,14 @@ export default function Page() {
 
               <label className="label">
                 帳票の種類
-                <select className="select" value={docType} onChange={(e) => setDocType(e.target.value)}>
+                <select
+                  className="select"
+                  value={docType}
+                  onChange={(e) => {
+                    setDocType(e.target.value);
+                    plausible("lead_doc_type_change", { value: e.target.value });
+                  }}
+                >
                   <option value="請求書">請求書</option>
                   <option value="納品書">納品書</option>
                   <option value="点検報告書">点検報告書</option>
@@ -182,7 +224,13 @@ export default function Page() {
                   className="input"
                   type="text"
                   value={company}
-                  onChange={(e) => setCompany(e.target.value)}
+                  onChange={(e) => {
+                    setCompany(e.target.value);
+                    plausible("lead_company_change", { length: e.target.value.length });
+                  }}
+                  onBlur={() => {
+                    if (company.trim()) plausible("lead_company_filled", { length: company.trim().length });
+                  }}
                   placeholder="例）株式会社〇〇"
                 />
               </label>
@@ -198,6 +246,9 @@ export default function Page() {
                     setFile(f);
                     if (f) {
                       track("file_attached", { size: f.size, type: f.type });
+                      plausible("file_attached", { size: f.size, type: f.type });
+                    } else {
+                      plausible("file_cleared");
                     }
                   }}
                 />
@@ -208,7 +259,13 @@ export default function Page() {
                 <textarea
                   className="textarea"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e) => {
+                    setNotes(e.target.value);
+                    plausible("lead_notes_change", { length: e.target.value.length });
+                  }}
+                  onBlur={() => {
+                    if (notes.trim()) plausible("lead_notes_filled", { length: notes.trim().length });
+                  }}
                   placeholder="例）毎月50枚、同じ様式。Excelは既存テンプレあり。"
                 />
               </label>
@@ -219,7 +276,14 @@ export default function Page() {
                 </div>
               )}
 
-              <button className="btn btnPrimary" type="submit" disabled={!canSubmit}>
+              <button
+                className="btn btnPrimary"
+                type="submit"
+                disabled={!canSubmit}
+                onClick={() => {
+                  plausible("lead_form_submit_click", { canSubmit, docType, hasFile: !!file });
+                }}
+              >
                 {status === "sending" ? "送信中..." : "帳票を送って確認する"}
               </button>
 
@@ -240,3 +304,4 @@ export default function Page() {
     </main>
   );
 }
+```
